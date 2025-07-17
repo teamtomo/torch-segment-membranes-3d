@@ -1,0 +1,11 @@
+# Do not edit - changes here will be overwritten by Copier
+_commit: v1
+_src_path: gh:pydev-guide/pyrepo-copier
+author_email: alisterburt@gmail.com
+author_name: TeamTomo
+github_username: teamtomo
+mode: tooling
+module_name: torch_segment_membranes_3d
+project_name: torch-segment-membranes-3d
+project_short_description: Semantic segmentation of membranes in 3D cryo-ET volumes
+
