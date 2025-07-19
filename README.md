@@ -6,7 +6,19 @@
 [![CI](https://github.com/teamtomo/torch-segment-membranes-3d/actions/workflows/ci.yml/badge.svg)](https://github.com/teamtomo/torch-segment-membranes-3d/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/teamtomo/torch-segment-membranes-3d/branch/main/graph/badge.svg)](https://codecov.io/gh/teamtomo/torch-segment-membranes-3d)
 
-Semantic segmentation of membranes in 3D cryo-ET volumes
+Semantic segmentation of membranes in 3D cryo-ET volumes, this is a minimal re-implementation of the original membrain-seg repository purely for inference. To retrain or fine-tune public weights, refer to the original github repository.
+
+## Quick Start
+
+```
+from torch_segment_membranes_3d import segment
+
+# Initialize the Segmenter Class
+segmenter = segment.MembrainSeg()
+
+# Run 
+segmentation = segmenter.run(data)
+```
 
 ## Development
 

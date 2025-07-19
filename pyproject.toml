@@ -35,7 +35,14 @@ classifiers = [
     "Typing :: Typed",
 ]
 # add your package dependencies here
-dependencies = []
+dependencies = [
+    "monai",
+    "numpy",
+    "pandas",
+    "torch",
+    "gdown",
+    "pytorch-lightning",
+]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # add dependencies for "extra" features here.  Not dev dependencies.

@@ -1,46 +1,11 @@
-from typing import Tuple
-
-import torch
-import torch.nn.functional as F
-
-from membrain_seg.segmentation.networks.unet import SemanticSegmentationUnet
-from membrain_seg.tomo_preprocessing.matching_utils.px_matching_utils import (
+from torch_segment_membranes_3d.models.base import SemanticSegmentationUnet
+from torch_segment_membranes_3d.utils import (
     fourier_cropping_torch,
     fourier_extend_torch,
 )
-
-
-def rescale_tensor(
-    sample: torch.Tensor, target_size: tuple, mode="trilinear"
-) -> torch.Tensor:
-    """
-    Rescales the input tensor by given factors using interpolation.
-
-    Parameters
-    ----------
-    sample : torch.Tensor
-        The input data as a torch tensor.
-    target_size : tuple
-        The target size of the rescaled tensor.
-    mode : str, optional
-        The mode of interpolation ('nearest', 'linear', 'bilinear',
-          'bicubic', or 'trilinear'). Default is 'trilinear'.
-
-    Returns
-    -------
-    torch.Tensor
-        The rescaled tensor.
-    """
-    # Add batch and channel dimensions
-    sample = sample.unsqueeze(0).unsqueeze(0)
-
-    # Apply interpolation
-    rescaled_sample = F.interpolate(
-        sample, size=target_size, mode=mode, align_corners=False
-    )
-
-    return rescaled_sample.squeeze(0).squeeze(0)
-
+import torch.nn.functional as F
+from typing import Tuple
+import torch
 
 class PreprocessedSemanticSegmentationUnet(SemanticSegmentationUnet):
     """U-Net with rescaling preprocessing.
@@ -107,3 +72,35 @@ class PreprocessedSemanticSegmentationUnet(SemanticSegmentationUnet):
         postprocessed_predicted = self.postprocess(predicted[0], orig_shape)
         # Return list to be compatible with deep supervision outputs
         return [postprocessed_predicted]
+    
+
+def rescale_tensor(
+    sample: torch.Tensor, target_size: tuple, mode="trilinear"
+) -> torch.Tensor:
+    """
+    Rescales the input tensor by given factors using interpolation.
+
+    Parameters
+    ----------
+    sample : torch.Tensor
+        The input data as a torch tensor.
+    target_size : tuple
+        The target size of the rescaled tensor.
+    mode : str, optional
+        The mode of interpolation ('nearest', 'linear', 'bilinear',
+          'bicubic', or 'trilinear'). Default is 'trilinear'.
+
+    Returns
+    -------
+    torch.Tensor
+        The rescaled tensor.
+    """
+    # Add batch and channel dimensions
+    sample = sample.unsqueeze(0).unsqueeze(0)
+
+    # Apply interpolation
+    rescaled_sample = F.interpolate(
+        sample, size=target_size, mode=mode, align_corners=False
+    )
+
+    return rescaled_sample.squeeze(0).squeeze(0)
