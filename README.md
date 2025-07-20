@@ -8,16 +8,20 @@
 
 Semantic segmentation of membranes in 3D cryo-ET volumes, this is a minimal re-implementation of the original membrain-seg repository purely for inference. To retrain or fine-tune public weights, refer to the original github repository.
 
+## Installation 
+
+[TODO - Get onto PyPI]
+
 ## Quick Start
 
 ```
 from torch_segment_membranes_3d import segment
 
 # Initialize the Segmenter Class
-segmenter = segment.MembrainSeg()
+segmenter = segment.MembrainSeg(sw_batch_size=4, sw_window_size=160)
 
-# Run 
-segmentation = segmenter.run(data)
+# Run Membrain Seg
+segmentation = segmenter.run(data, progress_bar=True)
 ```
 
 ## Development
