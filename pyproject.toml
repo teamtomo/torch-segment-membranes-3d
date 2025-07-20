@@ -41,6 +41,7 @@ dependencies = [
     "pandas",
     "torch",
     "gdown",
+    "scipy",    
     "pytorch-lightning",
 ]
 
