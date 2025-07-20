@@ -2,6 +2,7 @@ from torch_segment_membranes_3d.models.inference_model import PreprocessedSemant
 from torch_segment_membranes_3d.augment import get_mirrored_img, get_prediction_transforms
 import torch_segment_membranes_3d.utils as utils
 from monai.inferers import SlidingWindowInferer
+from tqdm import tqdm
 import numpy as np
 import torch
 
@@ -10,8 +11,23 @@ class MembrainSeg:
 
     def __init__(self, device=None, sw_batch_size = 4, sw_window_size = 160):
 
-        # Determine Devicec
-        self.device = device
+        # Determine Device
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Set the Sliding Window Parameters
+        self.sw_batch_size = sw_batch_size
+        self.sw_window_size = sw_window_size
+
+        # Perform sliding window inference on the new data
+        roi_size = (sw_window_size, sw_window_size, sw_window_size)
+        self.inferer = SlidingWindowInferer(
+            roi_size,
+            sw_batch_size,
+            overlap=0.5,
+            progress=False,
+            mode="gaussian",
+            device=torch.device("cpu"),
+        )
 
         # Get the Model
         checkpoint = utils.get_membrain_checkpoint()
@@ -23,6 +39,7 @@ class MembrainSeg:
             strict=False,
         )
         self.model.to(device)
+        self.model.target_shape = (sw_window_size, sw_window_size, sw_window_size)
 
         # Put the model into evaluation mode
         self.model.eval()
@@ -56,35 +73,24 @@ class MembrainSeg:
         new_data = new_data.unsqueeze(0)
 
         # Move to device
-        new_data = new_data.to(self.device)
+        new_data = new_data.to('cpu')
 
         return new_data 
 
-    def run(self, data, threshold=0, test_time_augmentation=True):
+    def run(self, data, threshold=0, test_time_augmentation=True, progress_bar=True):
 
         # Check input data type for return type matching
         input_is_numpy = isinstance(data, np.ndarray)
 
         data = self.preprocess(data).to(torch.float32)
 
-        # Perform sliding window inference on the new data
-        roi_size = (self.sw_window_size, self.sw_window_size, self.sw_window_size)
-        inferer = SlidingWindowInferer(
-            roi_size,
-            self.sw_batch_size,
-            overlap=0.5,
-            progress=False,
-            mode="gaussian",
-            device=torch.device("cpu"),
-        )
-
         # Perform test time augmentation (8-fold mirroring)
         predictions = torch.zeros_like(data)
 
-        for m in range(8 if test_time_augmentation else 1):
+        for m in tqdm(range(8 if test_time_augmentation else 1), disable=not progress_bar):
             with torch.no_grad(), torch.cuda.amp.autocast():
                 mirrored_input = get_mirrored_img(data.clone(), m).to(self.device)
-                mirrored_pred = inferer(mirrored_input, self.model)
+                mirrored_pred = self.inferer(mirrored_input, self.model)
                 if not (isinstance(mirrored_pred, (list, tuple))):
                     mirrored_pred = [mirrored_pred]
                 correct_pred = get_mirrored_img(mirrored_pred[0], m)
