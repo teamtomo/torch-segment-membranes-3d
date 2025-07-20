@@ -14,7 +14,7 @@ Semantic segmentation of membranes in 3D cryo-ET volumes, this is a minimal re-i
 
 ## Quick Start
 
-```
+```python
 from torch_segment_membranes_3d import segment
 
 # Initialize the Segmenter Class
