@@ -1,11 +1,10 @@
-import pytest
-import torch
-import numpy as np
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Import your actual modules
 import torch_segment_membranes_3d.utils as utils
 from torch_segment_membranes_3d.augment import get_mirrored_img, get_prediction_transforms
+import pytest, torch
+import numpy as np
 
 
 class TestUtils:
