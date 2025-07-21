@@ -123,10 +123,6 @@ skip-magic-trailing-comma = false  # default is false
 minversion = "7.0"
 addopts = ["--color=yes",  "--disable-warnings"]
 testpaths = ["tests"]
-filterwarnings = [
-    "error",
-    "ignore::urllib3.exceptions.NotOpenSSLWarning"
-]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]

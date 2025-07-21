@@ -126,5 +126,6 @@ class TestMembrainSeg:
         result = seg.run(data, threshold=0.5, test_time_augmentation=False)
         
         # Should apply threshold: 0.3 -> 0, 0.7 -> 1
-        assert result[0] == 0
-        assert result[1] == 1
+        # Result is flattened after squeeze operations
+        assert result.flatten()[0] == 0
+        assert result.flatten()[1] == 1
