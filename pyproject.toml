@@ -121,11 +121,10 @@ skip-magic-trailing-comma = false  # default is false
 # https://docs.pytest.org/
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = ["--color=yes"]
+addopts = ["--color=yes",  "--disable-warnings"]
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    "ignore::FutureWarning", 
     "ignore::urllib3.exceptions.NotOpenSSLWarning"
 ]
 
