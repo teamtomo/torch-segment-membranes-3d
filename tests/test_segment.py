@@ -68,8 +68,8 @@ class TestMembrainSeg:
     
     @patch('torch_segment_membranes_3d.segment.get_mirrored_img')
     @patch('torch_segment_membranes_3d.segment.tqdm')
-    def test_run_numpy(self, mock_tqdm, mock_mirrored):
-        """Test run method with numpy input."""
+    def test_predict_numpy(self, mock_tqdm, mock_mirrored):
+        """Test predict method with numpy input."""
         seg = self.setup_seg()
         seg.preprocess = MagicMock(return_value=torch.randn(1, 1, 16, 16, 16))
         seg.inferer = MagicMock(return_value=torch.randn(1, 1, 16, 16, 16))
@@ -77,14 +77,14 @@ class TestMembrainSeg:
         mock_tqdm.side_effect = lambda x, disable=False: x
         
         data = np.random.randn(16, 16, 16)
-        result = seg.run(data, test_time_augmentation=False)
+        result = seg.predict(data, test_time_augmentation=False)
         
         assert isinstance(result, np.ndarray)
     
     @patch('torch_segment_membranes_3d.segment.get_mirrored_img')
     @patch('torch_segment_membranes_3d.segment.tqdm')
-    def test_run_torch(self, mock_tqdm, mock_mirrored):
-        """Test run method with torch input."""
+    def test_predict_torch(self, mock_tqdm, mock_mirrored):
+        """Test predict method with torch input."""
         seg = self.setup_seg()
         seg.preprocess = MagicMock(return_value=torch.randn(1, 1, 8, 8, 8))
         seg.inferer = MagicMock(return_value=torch.randn(1, 1, 8, 8, 8))
@@ -92,14 +92,14 @@ class TestMembrainSeg:
         mock_tqdm.side_effect = lambda x, disable=False: x
         
         data = torch.randn(8, 8, 8)
-        result = seg.run(data, test_time_augmentation=False)
+        result = seg.predict(data, test_time_augmentation=False)
         
         assert isinstance(result, torch.Tensor)
     
     @patch('torch_segment_membranes_3d.segment.get_mirrored_img')
     @patch('torch_segment_membranes_3d.segment.tqdm')
-    def test_run_with_tta(self, mock_tqdm, mock_mirrored):
-        """Test run method with test time augmentation."""
+    def test_predict_with_tta(self, mock_tqdm, mock_mirrored):
+        """Test predict method with test time augmentation."""
         seg = self.setup_seg()
         seg.preprocess = MagicMock(return_value=torch.randn(1, 1, 4, 4, 4))
         seg.inferer = MagicMock(return_value=torch.randn(1, 1, 4, 4, 4))
@@ -107,14 +107,14 @@ class TestMembrainSeg:
         mock_tqdm.side_effect = lambda x, disable=False: x
         
         data = np.random.randn(4, 4, 4)
-        result = seg.run(data, test_time_augmentation=True)
+        result = seg.predict(data, test_time_augmentation=True)
         
         assert seg.inferer.call_count == 8  # TTA calls inferer 8 times
     
     @patch('torch_segment_membranes_3d.segment.get_mirrored_img')
     @patch('torch_segment_membranes_3d.segment.tqdm')
-    def test_run_threshold(self, mock_tqdm, mock_mirrored):
-        """Test run method with threshold."""
+    def test_predict_threshold(self, mock_tqdm, mock_mirrored):
+        """Test predict method with threshold."""
         seg = self.setup_seg()
         mock_pred = torch.tensor([[[[0.3, 0.7]]]])
         seg.preprocess = MagicMock(return_value=mock_pred)
@@ -123,7 +123,7 @@ class TestMembrainSeg:
         mock_tqdm.side_effect = lambda x, disable=False: x
         
         data = np.array([[1.0]])
-        result = seg.run(data, threshold=0.5, test_time_augmentation=False)
+        result = seg.predict(data, threshold=0.5, test_time_augmentation=False)
         
         # Should apply threshold: 0.3 -> 0, 0.7 -> 1
         # Result is flattened after squeeze operations

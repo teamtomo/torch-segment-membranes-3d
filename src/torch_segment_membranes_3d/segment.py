@@ -76,11 +76,13 @@ class MembrainSeg:
         new_data = new_data.to('cpu')
 
         return new_data 
-
-    def run(self, data, threshold=0, test_time_augmentation=True, progress_bar=True):
-
+        
+    def predict_probabilities(self, data, test_time_augmentation=True, progress_bar=True):
+        """
+        Predict probabilities of membrane segmentation.
+        """
         # Check input data type for return type matching
-        input_is_numpy = isinstance(data, np.ndarray)
+        self.input_is_numpy = isinstance(data, np.ndarray)
 
         data = self.preprocess(data).to(torch.float32)
 
@@ -102,12 +104,32 @@ class MembrainSeg:
         # Remove batch and channel dimensions for output
         predictions = predictions.squeeze(0).squeeze(0)
 
+        # Return results
+        if self.input_is_numpy:
+            return predictions.numpy()
+        else:
+            return predictions
+        
+    def predict_mask(self, data, threshold=0, test_time_augmentation=True, progress_bar=True):
+        """
+        Predict mask of membrane segmentation.
+        """
+        
+        # Get probabilities
+        predictions = self.predict_probabilities(data, test_time_augmentation, progress_bar)
+        
         # Apply segmentation threshold
         predictions[predictions > threshold] = 1
         predictions[predictions <= threshold] = 0
 
-        # Return results
-        if input_is_numpy:
-            return predictions.numpy()
-        else:
-            return predictions
+        return predictions
+        
+    def predict(self, data, threshold=0, test_time_augmentation=True, progress_bar=True):
+        """
+        Predict mask of membrane segmentation.
+        This is a wrapper for predict_mask.
+        """
+
+        # Return mask
+        return self.predict_mask(data, threshold, test_time_augmentation, progress_bar)       
+
