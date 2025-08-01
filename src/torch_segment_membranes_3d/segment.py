@@ -34,8 +34,7 @@ class MembrainSeg:
             checkpoint = utils.get_membrain_checkpoint()
 
         # Initialize the model and load trained weights from checkpoint
-        self.model = load_model_from_checkpoint(checkpoint, device)
-        self.model.to(device)
+        self.model = load_model_from_checkpoint(checkpoint, self.device)
         self.model.target_shape = (sw_window_size, sw_window_size, sw_window_size)
 
         # Put the model into evaluation mode
@@ -87,7 +86,7 @@ class MembrainSeg:
         predictions = torch.zeros_like(data)
 
         for m in tqdm(range(8 if test_time_augmentation else 1), disable=not progress_bar):
-            with torch.no_grad(), torch.cuda.amp.autocast():
+            with torch.no_grad():
                 mirrored_input = get_mirrored_img(data.clone(), m).to(self.device)
                 mirrored_pred = self.inferer(mirrored_input, self.model)
                 if not (isinstance(mirrored_pred, (list, tuple))):

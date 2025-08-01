@@ -36,11 +36,15 @@ def create_membrain_model():
         deep_supr_num=2,
     )
 
-
 def load_model_from_checkpoint(checkpoint_path, device=None):
     """Load model with weights from checkpoint."""
+    # Determine device if not provided
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     model = create_membrain_model()
     
+    # Load checkpoint with proper device mapping
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
     # Handle different checkpoint formats
@@ -57,4 +61,6 @@ def load_model_from_checkpoint(checkpoint_path, device=None):
         model_state_dict = checkpoint
         
     model.load_state_dict(model_state_dict, strict=False)
+    model.to(device)
+    
     return model
