@@ -1,5 +1,5 @@
-from torch_segment_membranes_3d.models.inference_model import PreprocessedSemanticSegmentationUnet
 from torch_segment_membranes_3d.augment import get_mirrored_img, get_prediction_transforms
+from torch_segment_membranes_3d.model import load_model_from_checkpoint
 import torch_segment_membranes_3d.utils as utils
 from monai.inferers import SlidingWindowInferer
 from tqdm import tqdm
@@ -9,7 +9,7 @@ import torch
 
 class MembrainSeg:
 
-    def __init__(self, device=None, sw_batch_size = 4, sw_window_size = 160):
+    def __init__(self, checkpoint=None,device=None, sw_batch_size = 4, sw_window_size = 160):
 
         # Determine Device
         self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,14 +30,11 @@ class MembrainSeg:
         )
 
         # Get the Model
-        checkpoint = utils.get_membrain_checkpoint()
+        if checkpoint is None:
+            checkpoint = utils.get_membrain_checkpoint()
 
         # Initialize the model and load trained weights from checkpoint
-        self.model = PreprocessedSemanticSegmentationUnet.load_from_checkpoint(
-            checkpoint,
-            map_location=device,
-            strict=False,
-        )
+        self.model = load_model_from_checkpoint(checkpoint, device)
         self.model.to(device)
         self.model.target_shape = (sw_window_size, sw_window_size, sw_window_size)
 
