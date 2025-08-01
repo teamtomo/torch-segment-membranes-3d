@@ -6,7 +6,9 @@
 [![CI](https://github.com/teamtomo/torch-segment-membranes-3d/actions/workflows/ci.yml/badge.svg)](https://github.com/teamtomo/torch-segment-membranes-3d/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/teamtomo/torch-segment-membranes-3d/branch/main/graph/badge.svg)](https://codecov.io/gh/teamtomo/torch-segment-membranes-3d)
 
-Semantic segmentation of membranes in 3D cryo-ET volumes, this is a minimal re-implementation of the original membrain-seg repository purely for inference. To retrain or fine-tune public weights, refer to the original github repository.
+Semantic segmentation of membranes in 3D cryo-ET volumes.
+
+This package makes the membrane segmentation functionality from [MemBrain v2](https://doi.org/10.1101/2024.01.05.574336) available as a library. Currently, only inference using existing weights is supported. To retrain or fine-tune public weights, please refer to membrain-seg.
 
 ## Installation 
 
