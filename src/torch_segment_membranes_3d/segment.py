@@ -1,0 +1,131 @@
+from torch_segment_membranes_3d.augment import get_mirrored_img, get_prediction_transforms
+from torch_segment_membranes_3d.model import load_model_from_checkpoint
+import torch_segment_membranes_3d.utils as utils
+from monai.inferers import SlidingWindowInferer
+from tqdm import tqdm
+import numpy as np
+import torch
+
+
+class MembrainSeg:
+
+    def __init__(self, checkpoint=None,device=None, sw_batch_size = 4, sw_window_size = 160):
+
+        # Determine Device
+        self.device = device if device is not None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Set the Sliding Window Parameters
+        self.sw_batch_size = sw_batch_size
+        self.sw_window_size = sw_window_size
+
+        # Perform sliding window inference on the new data
+        roi_size = (sw_window_size, sw_window_size, sw_window_size)
+        self.inferer = SlidingWindowInferer(
+            roi_size,
+            sw_batch_size,
+            overlap=0.5,
+            progress=False,
+            mode="gaussian",
+            device=torch.device("cpu"),
+        )
+
+        # Get the Model
+        if checkpoint is None:
+            checkpoint = utils.get_membrain_checkpoint()
+
+        # Initialize the model and load trained weights from checkpoint
+        self.model = load_model_from_checkpoint(checkpoint, self.device)
+        self.model.target_shape = (sw_window_size, sw_window_size, sw_window_size)
+
+        # Put the model into evaluation mode
+        self.model.eval()
+
+        # Get Prediction Transforms
+        self.transforms = get_prediction_transforms()
+
+    def preprocess(self, data, normalize_data=True):
+        """
+        Preprocess tomogram data from numpy array or PyTorch tensor for inference.
+
+        Adapted from load_data_for_inference in membrain-seg repository.
+        """
+        # Convert torch tensor to numpy if needed
+        if isinstance(data, torch.Tensor):
+            data = data.detach().cpu().numpy()
+
+        # Normalize data if requested
+        if normalize_data:
+            mean_val = np.mean(data)
+            std_val = np.std(data)
+            data = (data - mean_val) / std_val
+
+        # Add channel dimension (C, H, W, D)
+        new_data = np.expand_dims(data, 0)
+
+        # Apply transforms
+        new_data = self.transforms(new_data)
+
+        # Add batch dimension
+        new_data = new_data.unsqueeze(0)
+
+        # Move to device
+        new_data = new_data.to('cpu')
+
+        return new_data 
+        
+    def predict_probabilities(self, data, test_time_augmentation=True, progress_bar=True):
+        """
+        Predict probabilities of membrane segmentation.
+        """
+        # Check input data type for return type matching
+        self.input_is_numpy = isinstance(data, np.ndarray)
+
+        data = self.preprocess(data).to(torch.float32)
+
+        # Perform test time augmentation (8-fold mirroring)
+        predictions = torch.zeros_like(data)
+
+        for m in tqdm(range(8 if test_time_augmentation else 1), disable=not progress_bar):
+            with torch.no_grad():
+                mirrored_input = get_mirrored_img(data.clone(), m).to(self.device)
+                mirrored_pred = self.inferer(mirrored_input, self.model)
+                if not (isinstance(mirrored_pred, (list, tuple))):
+                    mirrored_pred = [mirrored_pred]
+                correct_pred = get_mirrored_img(mirrored_pred[0], m)
+                predictions += correct_pred.detach().cpu()
+
+        if test_time_augmentation:
+            predictions /= 8.0
+
+        # Remove batch and channel dimensions for output
+        predictions = predictions.squeeze(0).squeeze(0)
+
+        # Return results
+        if self.input_is_numpy:
+            return predictions.numpy()
+        else:
+            return predictions
+        
+    def predict_mask(self, data, threshold=0, test_time_augmentation=True, progress_bar=True):
+        """
+        Predict mask of membrane segmentation.
+        """
+        
+        # Get probabilities
+        predictions = self.predict_probabilities(data, test_time_augmentation, progress_bar)
+        
+        # Apply segmentation threshold
+        predictions[predictions > threshold] = 1
+        predictions[predictions <= threshold] = 0
+
+        return predictions
+        
+    def predict(self, data, threshold=0, test_time_augmentation=True, progress_bar=True):
+        """
+        Predict mask of membrane segmentation.
+        This is a wrapper for predict_mask.
+        """
+
+        # Return mask
+        return self.predict_mask(data, threshold, test_time_augmentation, progress_bar)       
+
