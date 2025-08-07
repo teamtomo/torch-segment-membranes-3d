@@ -17,13 +17,13 @@ This package makes the membrane segmentation functionality from [MemBrain v2](ht
 ## Quick Start
 
 ```python
-from torch_segment_membranes_3d import segment
+from torch_segment_membranes_3d import predict_membrane_probabilities, predict_membrane_mask
 
-# Initialize the Segmenter Class
-segmenter = segment.MembrainSeg(sw_batch_size=4, sw_window_size=160)
+# Get Segmentation Probabilities
+probabilities = predict_membrane_probabilities(data)
 
-# Run Membrain Seg
-segmentation = segmenter.run(data, progress_bar=True)
+# Get Segmentation Mask
+mask = predict_membrane_mask(data, threshold=0)
 ```
 
 ## Development
